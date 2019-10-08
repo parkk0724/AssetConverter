@@ -39,6 +39,12 @@
     <ClCompile Include="Math.cpp">
       <Filter>Math</Filter>
     </ClCompile>
+    <ClCompile Include="filesearch.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="filesearch2.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D3DMatrix4x4.h">

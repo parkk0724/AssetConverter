@@ -79,25 +79,30 @@ int main(int argc, char* argv[])
 
 	if (scene != nullptr)
 	{
-		Material material;
+		SkeletalMesh skeletalmesh;
+		
 		for (unsigned int i = 0; i < scene->mNumMaterials; ++i)
 		{
+			Material material;
 			aiString path;
-			aiMaterial * m = scene->mMaterials[i];
-			m->GetTexture(aiTextureType_DIFFUSE, 0, &path);
+			aiMaterial * aimaterial = scene->mMaterials[i];
+			aimaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path);
 			material.name = path.C_Str();
 			aiColor3D color;
-			m->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-			int a = 0;
+			aimaterial->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+			material.diffuse.x = color.r;
+			material.diffuse.y = color.g;
+			material.diffuse.z = color.b;
+			material.diffuse.w = 1.0f;
+
+			skeletalmesh.materials.push_back(material);
 		}
 
-		SkeletalMesh skeletalmesh;
 		skeletalmesh.subsets.resize(scene->mNumMeshes);
 		for (unsigned int i = 0; i < scene->mNumMeshes; ++i)
 		{
 			// 위치
 			const aiMesh* mesh = scene->mMeshes[i];
-			//skeletalmesh.subsets[i].materialName = mesh->ma
 			SkinnedVertex skVertex;
 
 			for (unsigned int j = 0; j < mesh->mNumVertices; ++j)
@@ -126,8 +131,9 @@ int main(int argc, char* argv[])
 			for (int i = 0; i > mesh->mNumFaces; i++)
 			{
 				aiFace face = mesh->mFaces[0];
-				uint32_t * a = face.mIndices;
-				uint32_t b = face.mNumIndices;
+				uint32_t * faceIndices = face.mIndices;
+				uint32_t faceNum = face.mNumIndices;
+				
 			}
 
 			// 사람 피부인 경우에만
@@ -139,9 +145,28 @@ int main(int argc, char* argv[])
 
 				Math::Matrix4x4 offset;
 				offset[0][0] = bone->mOffsetMatrix.a1;
+				offset[0][1] = bone->mOffsetMatrix.b1;
+				offset[0][2] = bone->mOffsetMatrix.c1;
+				offset[0][3] = bone->mOffsetMatrix.d1;
+
+				offset[1][0] = bone->mOffsetMatrix.a2;
+				offset[1][1] = bone->mOffsetMatrix.b2;
+				offset[1][2] = bone->mOffsetMatrix.c2;
+				offset[1][3] = bone->mOffsetMatrix.d2;
+
+				offset[2][0] = bone->mOffsetMatrix.a3;
+				offset[2][1] = bone->mOffsetMatrix.b3;
+				offset[2][2] = bone->mOffsetMatrix.c3;
+				offset[2][3] = bone->mOffsetMatrix.d3;
+
+				offset[3][0] = bone->mOffsetMatrix.a4;
+				offset[3][1] = bone->mOffsetMatrix.b4;
+				offset[3][2] = bone->mOffsetMatrix.c4;
+				offset[3][3] = bone->mOffsetMatrix.d4;
 
 				skeletalmesh.subsets[0].offsetTransforms[bone->mName.C_Str()] = offset;
 
+				//
 				for (unsigned int j = 0; j < bone->mNumWeights; ++j)
 				{
 					const aiVertexWeight& weight = bone->mWeights[j];
@@ -149,8 +174,14 @@ int main(int argc, char* argv[])
 					skeletalmesh.subsets[0].vertices[weight.mVertexId].jointWeights[5] = weight.mWeight;
 				}
 			}
-
 			//mesh->
+		}
+
+		FILE* fp = fopen("filename", "wb");
+		if (NULL != fp)
+		{
+			fwrite(&skeletalmesh, 1, sizeof(SkeletalMesh), fp);
+			fclose(fp);
 		}
 	}
 
