@@ -4,38 +4,40 @@
 #include <string.h>
 #include <io.h>
 #include <Windows.h>
+#include <iostream>
+using namespace std;
 
 struct _finddata_t fd;
 
 int isFileOrDir()
 {
-	if (fd.attrib & _A_SUBDIR)
+	if (fd.attrib & _A_SUBDIR) //Dir
 		return 0;
-	else
+	else // File
 		return 1;
 }
 
-void FileSearch(char file_path[], char searchFile[])
+void FileSearch(string file_path, string searchFile)
 {
 	intptr_t handle;
 	int check = 0;
-	char file_path2[_MAX_PATH];
+	string file_path2;
 
-	strcat(file_path, "\\");
-	strcpy(file_path2, file_path);
-	strcat(file_path, "*");
+	file_path += "\\";
+	file_path2 = file_path;
+	file_path += "*";
 
-	if ((handle = _findfirst(file_path, &fd)) == -1)
+	if ((handle = _findfirst(file_path.c_str(), &fd)) == -1)
 	{
-		printf("No such file or directory\n");
+		cout << "No such file or directory" << endl;
 		return;
 	}
 
 	while (_findnext(handle, &fd) == 0)
 	{
-		char file_pt[_MAX_PATH];
-		strcpy(file_pt, file_path2);
-		strcat(file_pt, fd.name);
+		string file_pt;
+		file_pt = file_path2;
+		file_pt += fd.name;
 
 		check = isFileOrDir();
 
@@ -45,7 +47,7 @@ void FileSearch(char file_path[], char searchFile[])
 		}
 		else if (check == 1 && fd.size != 0 && fd.name[0] != '.')
 		{
-			printf("파일명 : %s, 크기:%d\n", file_pt, fd.size);
+			cout << "파일명 : " << file_pt.c_str() << ", 크기 : " << fd.size << endl;
 		}
 	}
 	_findclose(handle);
@@ -53,8 +55,8 @@ void FileSearch(char file_path[], char searchFile[])
 
 int main()
 {
-	char file_path[_MAX_PATH] = "C:";
-	char searchfile[_MAX_PATH] = "a.txt";
+	string file_path = "C:";
+	string searchfile = "a.txt";
 	FileSearch(file_path, searchfile);
 
 	return 0;

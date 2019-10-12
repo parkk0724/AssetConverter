@@ -42,7 +42,13 @@
     <ClCompile Include="filesearch.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="filesearch2.cpp">
+    <ClCompile Include="bone.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="fileread.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="AssetConverter.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
