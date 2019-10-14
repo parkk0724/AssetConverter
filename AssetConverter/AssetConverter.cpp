@@ -168,14 +168,14 @@ void ReadMaterial(const aiScene* scene, vector<Material>& materials)
 
 void WriteSkeletalMesh(const wstring& filename, const SkeletalMesh& mesh)
 {
-	//ofstream fout(filename, ofstream::binary);
-	ofstream fout(filename);
+	ofstream fout(filename, ofstream::binary);
+	//ofstream fout(filename);
 
 	// 1. 서브메시 갯수
 	size_t subsetCount = mesh.subsets.size();
-	//fout.write((char*)&subsetCount, sizeof(size_t));
-
-	fout << subsetCount << "\n";
+	fout.write((char*)&subsetCount, sizeof(size_t));
+	//fout << "subsetCount : ";
+	//fout << subsetCount << "\n";
 
 	// 2. 서브메시 정보
 	// 2.1 정점
@@ -185,52 +185,64 @@ void WriteSkeletalMesh(const wstring& filename, const SkeletalMesh& mesh)
 	{
 		// 버텍스 개수
 		size_t vertexCount = subset.vertices.size();
-		//fout.write((char*)&vertexCount, sizeof(size_t));
-		
-		fout << vertexCount << "\n";
+		fout.write((char*)&vertexCount, sizeof(size_t));
+		//fout << "vertexCount : ";
+		//fout << vertexCount << "\n";
 		for (const auto& vertex : subset.vertices)
 		{
-			//fout.write((char*)&vertex.position, sizeof(aiVector3D));
-			fout << vertex.position.x << " " << vertex.position.y << " " << vertex.position.z << "\n";
-			//fout.write((char*)&vertex.normal, sizeof(aiVector3D));
-			fout << vertex.normal.x << " " << vertex.normal.y << " " << vertex.normal.z << "\n";
-			//fout.write((char*)&vertex.uv, sizeof(aiVector2D));
-			fout << vertex.uv.x << "" << vertex.uv.y << "\n";
+			fout.write((char*)&vertex.position, sizeof(aiVector3D));
+			//fout << "position : ";
+			//fout << vertex.position.x << " " << vertex.position.y << " " << vertex.position.z << "\n";
+			fout.write((char*)&vertex.normal, sizeof(aiVector3D));
+			//fout << "normal :  ";
+			//fout << vertex.normal.x << " " << vertex.normal.y << " " << vertex.normal.z << "\n";
+			fout.write((char*)&vertex.uv, sizeof(aiVector2D));
+			//fout << "uv :  ";
+			//fout << vertex.uv.x << "" << vertex.uv.y << "\n";
 
 			for (size_t i = 0; i < 4; ++i)
 			{
 				size_t length = vertex.jointIndices[i].length();
-				//fout.write((char*)&length, sizeof(size_t));
-				fout << length << "\n";
+				fout.write((char*)&length, sizeof(size_t));
+				//fout << "jointIndices_Length : ";
+				//fout << length << "\n";
 
 				if (length > 0)
 				{
-					//fout.write((char*)vertex.jointIndices[i].data(), sizeof(char) * length);
-					fout << vertex.jointIndices[i] << "\n";
-					//fout.write((char*)&vertex.jointWeights[i], sizeof(float));
-					fout << vertex.jointWeights[i] << "\n";
+					fout.write((char*)vertex.jointIndices[i].data(), sizeof(char) * length);
+					//fout << "jointIndices : ";
+					//fout << vertex.jointIndices[i] << "\n";
+					fout.write((char*)&vertex.jointWeights[i], sizeof(float));
+					//fout << "jointWeights : ";
+					//fout << vertex.jointWeights[i] << "\n";
 				}
 			}
 		}
 
 		// 인덱스 개수
 		size_t indexCount = subset.indices.size();
-		//fout.write((char*)&indexCount, sizeof(size_t));
-		fout << indexCount << "\n";
+		fout.write((char*)&indexCount, sizeof(size_t));
+		//fout << "indexCount : ";
+		//fout << indexCount << "\n";
 
+		//fout << "index : ";
 		for (auto index : subset.indices)
-			//fout.write((char*)&index, sizeof(uint32_t));
-			fout << index << "\n";
+			fout.write((char*)&index, sizeof(uint32_t));
+			//fout << index << "\n";
 
 		
 		// 버텍스 시작 위치
-		//fout.write((char*)&subset.vertexStart, sizeof(size_t));
-		fout << subset.vertexStart << " ";
+		fout.write((char*)&subset.vertexStart, sizeof(size_t));
+		//fout << "vertexStart : ";
+		//fout << subset.vertexStart << " ";
 
 		// 인덱스 시작 위치
-		//fout.write((char*)&subset.faceStart, sizeof(size_t));
-		fout << subset.faceStart << " ";
+		fout.write((char*)&subset.faceStart, sizeof(size_t));
+		//fout << " faceStart : ";
+		//fout << subset.faceStart << " \n";
 	}
+
+	fout.close();
 }
 
 int isFileOrDir()
@@ -241,17 +253,17 @@ int isFileOrDir()
 		return 1;
 }
 
-void FileSearch(string file_path)
+void FileSearch(IN string inFile_path, OUT string outFile_path)
 {
 	intptr_t handle;
 	int check = 0;
 	string file_path2;
 
-	file_path += "\\";
-	file_path2 = file_path;
-	file_path += "*";
+	inFile_path += "\\";
+	file_path2 = inFile_path;
+	inFile_path += "*";
 
-	if ((handle = _findfirst(file_path.c_str(), &fd)) == -1)
+	if ((handle = _findfirst(inFile_path.c_str(), &fd)) == -1)
 	{
 		cout << "No such file or directory" << endl;
 		return;
@@ -271,7 +283,7 @@ void FileSearch(string file_path)
 
 		if (check == 0 && fd.name[0] != '.')
 		{
-			FileSearch(file_pt);
+			FileSearch(file_pt, outFile_path);
 		}
 		else if (check == 1 && fd.size != 0 && fd.name[0] != '.' && strEXT == ".x")
 		{
@@ -294,10 +306,14 @@ void FileSearch(string file_path)
 				ReadMaterial(scene, materials);
 
 				// 파일 쓰기
-				string strTemp = file_path2 + strName + ".skm";
+				string strTemp = outFile_path + "\\"+ strName + ".skm";
 				wstring wsfout_pt;
 				wsfout_pt.assign(strTemp.begin(), strTemp.end());
 				WriteSkeletalMesh(wsfout_pt, skm);
+				cout << "파일경로 : " << strTemp << "\n";
+
+				totalFaceCount = 0;
+				totalVertexCount = 0;
 			}
 		}
 	}
@@ -305,9 +321,11 @@ void FileSearch(string file_path)
 }
 
 int main(int argc, char* argv[])
-{
-	string file_path = "C:\\x";
-	FileSearch(file_path);
+{ 
+
+	string inFile_path = argv[2];
+	string outFile_path = argv[3];
+	FileSearch(inFile_path, outFile_path);
 
 	return 0;
 }
